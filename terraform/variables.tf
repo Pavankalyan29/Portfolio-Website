@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "ecr_repo_name" {
   description = "ECR repository name"
   type        = string
-  default     = "portfolio"
+  default     = "portfolio-web"
 }
 
 variable "instance_type" {
