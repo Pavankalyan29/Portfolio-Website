@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "ecr_repo_name" {
@@ -19,7 +19,7 @@ variable "instance_type" {
 variable "key_name" {
   description = "SSH key pair name (optional)"
   type        = string
-  default     = ""
+  default     = "jenkins-key"
 }
 
 variable "allowed_cidr" {
