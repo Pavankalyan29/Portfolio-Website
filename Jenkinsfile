@@ -23,6 +23,7 @@ pipeline {
           docker build -t ${ECR_REPO}:${IMAGE_TAG} .
         '''
       }
+      
     }
 
     stage('Verify AWS Access') {
