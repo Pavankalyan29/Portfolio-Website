@@ -1,29 +1,3 @@
-# # ---------- ECR Repository ----------
-# resource "aws_ecr_repository" "app" {
-#     name                 = var.ecr_repo_name
-#     image_tag_mutability = "MUTABLE"
-# }
-
-# # ---------- ECR Lifecycle Policy ----------
-# resource "aws_ecr_lifecycle_policy" "app_policy" {
-#     repository = aws_ecr_repository.app.name
-#     policy = jsonencode({
-#         rules = [
-#         {
-#             rulePriority = 1
-#             description  = "Keep last 10 images"
-#             selection = {
-#                 tagStatus    = "any"
-#                 countType    = "imageCountMoreThan"
-#                 countNumber  = 10
-#             }
-#             action = {
-#                 type = "expire"
-#             }
-#         }]
-#     })
-# }
-
 # ---------- IAM Role for EC2 ----------
 data "aws_iam_policy" "ecr_readonly" {
   arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
@@ -92,7 +66,7 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-# ---------- EC2 Instance ----------
+# ---------- AMI ----------
 data "aws_ami" "amazon_linux2" {
   most_recent = true
   owners      = ["amazon"]
@@ -102,6 +76,7 @@ data "aws_ami" "amazon_linux2" {
   }
 }
 
+# ---------- EC2 Instance ----------
 resource "aws_instance" "web" {
   ami                    = data.aws_ami.amazon_linux2.id
   instance_type          = var.instance_type
@@ -118,13 +93,24 @@ resource "aws_instance" "web" {
 
               REGION="${var.aws_region}"
 
+              # Get AWS Account ID using metadata service
               ACCOUNT_ID=$$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F'"' '{print $$4}')
-              ECR_URI="$${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com"
 
+              # Build ECR URI using account ID and repo name
+              ECR_URI="$${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}"
+
+              # Login to ECR
               aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin $${ECR_URI}
 
-              docker pull ${aws_ecr_repository.app.repository_url}:latest || true
-              docker run -d --name portfolio -p 80:80 ${aws_ecr_repository.app.repository_url}:latest
+              # Pull latest image
+              docker pull $${ECR_URI}:latest || true
+
+              # Stop old container if exists
+              docker stop portfolio || true
+              docker rm portfolio || true
+
+              # Run new container
+              docker run -d --name portfolio -p 80:80 $${ECR_URI}:latest
               EOF
 
   tags = {
