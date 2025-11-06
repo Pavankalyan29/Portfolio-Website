@@ -1,28 +1,28 @@
-# ---------- ECR Repository ----------
-resource "aws_ecr_repository" "app" {
-    name                 = var.ecr_repo_name
-    image_tag_mutability = "MUTABLE"
-}
+# # ---------- ECR Repository ----------
+# resource "aws_ecr_repository" "app" {
+#     name                 = var.ecr_repo_name
+#     image_tag_mutability = "MUTABLE"
+# }
 
-# ---------- ECR Lifecycle Policy ----------
-resource "aws_ecr_lifecycle_policy" "app_policy" {
-    repository = aws_ecr_repository.app.name
-    policy = jsonencode({
-        rules = [
-        {
-            rulePriority = 1
-            description  = "Keep last 10 images"
-            selection = {
-                tagStatus    = "any"
-                countType    = "imageCountMoreThan"
-                countNumber  = 10
-            }
-            action = {
-                type = "expire"
-            }
-        }]
-    })
-}
+# # ---------- ECR Lifecycle Policy ----------
+# resource "aws_ecr_lifecycle_policy" "app_policy" {
+#     repository = aws_ecr_repository.app.name
+#     policy = jsonencode({
+#         rules = [
+#         {
+#             rulePriority = 1
+#             description  = "Keep last 10 images"
+#             selection = {
+#                 tagStatus    = "any"
+#                 countType    = "imageCountMoreThan"
+#                 countNumber  = 10
+#             }
+#             action = {
+#                 type = "expire"
+#             }
+#         }]
+#     })
+# }
 
 # ---------- IAM Role for EC2 ----------
 data "aws_iam_policy" "ecr_readonly" {
