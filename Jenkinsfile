@@ -71,9 +71,9 @@ pipeline {
     }
 
     stage('Terraform Deploy (optional)') {
-      when {
-        expression { return fileExists('infra') || fileExists('main.tf') }
-      }
+      // when {
+      //   expression { return fileExists('infra') || fileExists('main.tf') }
+      // }
       steps {
         dir('infra') {
           sh '''
