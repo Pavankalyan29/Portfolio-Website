@@ -116,13 +116,13 @@ resource "aws_instance" "web" {
               service docker start
               usermod -a -G docker ec2-user
 
-              # Login to ECR
               REGION="${var.aws_region}"
-              ACCOUNT_ID=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F'"' '{print $4}')
-              ECR_URI="${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com"
-              aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${ECR_URI}
 
-              # Pull and run container
+              ACCOUNT_ID=$$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F'"' '{print $$4}')
+              ECR_URI="$${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com"
+
+              aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin $${ECR_URI}
+
               docker pull ${aws_ecr_repository.app.repository_url}:latest || true
               docker run -d --name portfolio -p 80:80 ${aws_ecr_repository.app.repository_url}:latest
               EOF
