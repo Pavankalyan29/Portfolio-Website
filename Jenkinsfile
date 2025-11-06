@@ -87,7 +87,7 @@ pipeline {
       // }
       steps {
         dir('terraform') {
-          withAWS(credentials: 'aws-creds', region: "${REGION}") {
+          withAWS(credentials: 'aws-creds', region: "${AWS_REGION}") {
             echo 'Initializing Terraform...'
             bat 'terraform init'
             bat 'terraform validate'
