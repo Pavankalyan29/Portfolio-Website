@@ -70,19 +70,30 @@ pipeline {
       }
     }
 
-    stage('Terraform Deploy (optional)') {
+    stage('Terraform Deploy') {
       // when {
       //   expression { return fileExists('infra') || fileExists('main.tf') }
       // }
+      // steps {
+      //   dir('infra') {
+      //     sh '''
+      //       set -e
+      //       echo "Running Terraform..."
+      //       terraform init -input=false
+      //       terraform plan -out=tfplan -input=false
+      //       terraform apply -input=false -auto-approve tfplan
+      //     '''
+      //   }
+      // }
       steps {
-        dir('infra') {
-          sh '''
-            set -e
-            echo "Running Terraform..."
-            terraform init -input=false
-            terraform plan -out=tfplan -input=false
-            terraform apply -input=false -auto-approve tfplan
-          '''
+        dir('terraform') {
+          withAWS(credentials: 'aws-creds', region: "${REGION}") {
+            echo 'Initializing Terraform...'
+            bat 'terraform init'
+            bat 'terraform validate'
+            bat 'terraform plan'
+            bat 'terraform apply -auto-approve'
+          }
         }
       }
     }
