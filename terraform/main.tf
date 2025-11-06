@@ -84,20 +84,18 @@ resource "aws_instance" "web" {
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
   key_name               = length(trimspace(var.key_name)) > 0 ? var.key_name : null
 
-  user_data = <<-EOF
+    user_data = <<-EOF
               #!/bin/bash
               set -e
 
-              # Update OS
               yum update -y
 
-              # Install docker
               amazon-linux-extras install docker -y
               systemctl start docker
               systemctl enable docker
               usermod -aG docker ec2-user
 
-              # Install AWS CLI (if missing)
+              # Install AWS CLI (if needed)
               if ! command -v aws &> /dev/null
               then
                 yum install -y awscli
@@ -105,23 +103,25 @@ resource "aws_instance" "web" {
 
               REGION="${var.aws_region}"
 
-              # Get AWS Account ID
-              ACCOUNT_ID=$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F'"' '{print $4}')
-              ECR_URI="${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}"
+              # Get AWS Account ID from EC2 metadata
+              ACCOUNT_ID=$$(curl -s http://169.254.169.254/latest/dynamic/instance-identity/document | grep accountId | awk -F '"' '{print $$4}')
+
+              # Construct ECR URL
+              ECR_URI="$${ACCOUNT_ID}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}"
 
               # Login to ECR
               aws ecr get-login-password --region ${var.aws_region} \
-                | docker login --username AWS --password-stdin ${ECR_URI}
+                | docker login --username AWS --password-stdin $${ECR_URI}
 
-              # Pull latest image
-              docker pull ${ECR_URI}:latest
+              # Pull image
+              docker pull $${ECR_URI}:latest
 
-              # Stop old container if running
+              # Stop and remove any old container
               docker stop portfolio || true
               docker rm portfolio || true
 
-              # Run new container
-              docker run -d --name portfolio -p 80:80 ${ECR_URI}:latest
+              # Run container
+              docker run -d --name portfolio -p 80:80 $${ECR_URI}:latest
               EOF
 
   tags = {
