@@ -120,10 +120,17 @@ resource "aws_instance" "web" {
               aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_URI
 
               # Pull latest image
-              docker pull $ECR_URI:latest
+              # docker pull $ECR_URI:latest
+              aws ecr get-login-password --region ap-south-1 \
+              | docker login --username AWS --password-stdin 108792016419.dkr.ecr.ap-south-1.amazonaws.com/portfolio-web
+
+              docker pull 108792016419.dkr.ecr.ap-south-1.amazonaws.com/portfolio-web:latest
+
 
               # Run container
-              docker run -d --name portfolio -p 80:80 $ECR_URI:latest
+              # docker run -d --name portfolio -p 80:80 $ECR_URI:latest
+              docker run -d --name portfolio -p 80:80 108792016419.dkr.ecr.ap-south-1.amazonaws.com/portfolio-web:latest
+
               EOF
 
   tags = {
