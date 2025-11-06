@@ -107,7 +107,7 @@ resource "aws_instance" "web" {
   instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.web_sg.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  key_name               = length(trim(var.key_name)) > 0 ? var.key_name : null
+  key_name               = length(trimspace(var.key_name)) > 0 ? var.key_name : null
 
   user_data = <<-EOF
               #!/bin/bash
